@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Мой день</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --color-primary:#6E86D6;
+    --color-primary-tint:#EAEEFA;
+    --color-bg:#EFE7DB;
+    --color-surface:#FBF8F3;
+    --color-text:#2C2621;
+    --color-text-secondary:#8C8479;
+    --color-border:rgba(44,38,33,0.09);
+    --color-success:#C9A227;
+    --color-success-tint:#FBF3DD;
+    --color-danger:#C9382E;
+    --radius-card:18px;
+    --radius-row:14px;
+    font-size:16px;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:var(--color-bg);
+    color:var(--color-text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 96px;
+    min-height:100vh;
+  }
+
+  /* ---------- header ---------- */
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:22px;
+  }
+
+  .header-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+
+  .avatar{
+    flex:none;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    object-fit:cover;
+    background:var(--color-primary-tint);
+  }
+
+  .header-text .date{
+    font-size:19px;
+    font-weight:500;
+    letter-spacing:-0.01em;
+  }
+
+  .header-text .status{
+    margin-top:3px;
+    font-size:13px;
+    color:var(--color-text-secondary);
+  }
+
+  .ring-wrap{
+    position:relative;
+    width:56px;
+    height:56px;
+    flex:none;
+  }
+
+  .ring{
+    width:56px;
+    height:56px;
+    transform:rotate(-90deg);
+  }
+
+  .ring-bg{
+    fill:none;
+    stroke:var(--color-border);
+    stroke-width:8;
+  }
+
+  .ring-fg{
+    fill:none;
+    stroke:var(--color-primary);
+    stroke-width:8;
+    stroke-linecap:round;
+    stroke-dasharray:163.36;
+    stroke-dashoffset:163.36;
+    transition:stroke-dashoffset .5s ease, stroke .5s ease;
+  }
+
+  .ring-fg.complete{ stroke:var(--color-success); }
+
+  .ring-percent{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:500;
+  }
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--color-surface);
+    border-radius:var(--radius-card);
+    border:0.5px solid var(--color-border);
+    padding:6px 6px 10px;
+    margin-bottom:16px;
+  }
+
+  .card-title{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin:0;
+    padding:14px 12px 10px;
+  }
+
+  .card-title span.label{
+    font-size:13px;
+    font-weight:500;
+    color:var(--color-text-secondary);
+  }
+
+  .card-title span.meta{
+    font-size:12px;
+    color:var(--color-text-secondary);
+  }
+
+  .list{ display:flex; flex-direction:column; }
+
+  .row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+    border-radius:var(--radius-row);
+    cursor:pointer;
+    user-select:none;
+    transition:background .15s ease;
+  }
+
+  .row:active{ background:var(--color-primary-tint); }
+
+  .row-icon{
+    flex:none;
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--color-primary-tint);
+    color:var(--color-primary);
+  }
+
+  .row-icon svg{ width:18px; height:18px; }
+
+  .row-title{
+    flex:1;
+    font-size:15px;
+    line-height:1.35;
+    transition:color .15s ease, opacity .15s ease;
+  }
+
+  .row.done .row-title{
+    color:var(--color-text-secondary);
+    text-decoration:line-through;
+    text-decoration-color:var(--color-border);
+    opacity:.8;
+  }
+
+  .row.done .row-icon{
+    background:var(--color-success-tint);
+    color:var(--color-success);
+  }
+
+  .check{
+    flex:none;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    border:1.5px solid var(--color-border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+
+  .row.done .check{
+    background:var(--color-success);
+    border-color:var(--color-success);
+    transform:scale(1.04);
+  }
+
+  .check svg{
+    width:13px;
+    height:13px;
+    opacity:0;
+    transform:scale(.6);
+    transition:opacity .15s ease, transform .15s ease;
+  }
+
+  .row.done .check svg{ opacity:1; transform:scale(1); }
+
+  .row + .row{ border-top:0.5px solid var(--color-border); }
+
+  /* ---------- finances ---------- */
+  .fin-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px;
+  }
+
+  .fin-row + .fin-row{ border-top:0.5px solid var(--color-border); }
+
+  .fin-name{ font-size:15px; }
+
+  .fin-amount{ font-size:15px; font-weight:500; font-variant-numeric:tabular-nums; }
+
+  .fin-total{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 12px 8px;
+    margin-top:4px;
+    border-top:0.5px solid var(--color-border);
+  }
+
+  .fin-total .label{ font-size:13px; color:var(--color-text-secondary); }
+  .fin-total .value{ font-size:20px; font-weight:500; font-variant-numeric:tabular-nums; }
+
+  /* ---------- tab bar ---------- */
+  .tabbar{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    display:flex;
+    justify-content:center;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, var(--color-bg) 60%, rgba(239,231,219,0));
+  }
+
+  .tabbar-inner{
+    display:flex;
+    gap:4px;
+    background:var(--color-surface);
+    border:0.5px solid var(--color-border);
+    border-radius:16px;
+    padding:4px;
+    width:100%;
+    max-width:448px;
+  }
+
+  .tab{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:10px 8px;
+    border-radius:12px;
+    font-size:13px;
+    font-weight:500;
+    color:var(--color-text-secondary);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+
+  .tab svg{ width:16px; height:16px; }
+
+  .tab.active{
+    background:var(--color-primary-tint);
+    color:var(--color-primary);
+  }
+
+  .screen[hidden]{ display:none !important; }
+
+  /* ---------- fallback / skeleton ---------- */
+  .fallback{ text-align:center; padding:60px 24px; }
+
+  .fallback-icon{
+    width:48px; height:48px; margin:0 auto 16px;
+    border-radius:50%;
+    background:var(--color-primary-tint);
+    color:var(--color-primary);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .fallback-icon svg{ width:22px; height:22px; }
+
+  .fallback p{ margin:0 0 18px; font-size:14px; color:var(--color-text-secondary); }
+
+  .fallback button{
+    border:none;
+    background:var(--color-primary);
+    color:#fff;
+    font-size:14px;
+    font-weight:500;
+    padding:11px 22px;
+    border-radius:12px;
+    cursor:pointer;
+  }
+
+  .fallback button:active{ opacity:.85; }
+
+  .skeleton{ padding:12px; }
+  .skeleton .bar{
+    height:14px; border-radius:7px;
+    background:var(--color-border);
+    margin:10px 0;
+    animation:pulse 1.1s ease-in-out infinite;
+  }
+  .skeleton .bar:nth-child(2){ width:70%; }
+
+  @keyframes pulse{ 0%,100%{ opacity:.6; } 50%{ opacity:1; } }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== screen: день ===== -->
+  <div class="screen" id="screenDay">
+
+    <header class="header" id="header" hidden>
+      <div class="header-left">
+        <img class="avatar" id="avatarImg" src="avatar.jpg" alt="">
+        <div class="header-text">
+          <div class="date" id="dateLabel">—</div>
+          <div class="status" id="statusLabel">Загрузка…</div>
+        </div>
+      </div>
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 60 60">
+          <circle class="ring-bg" cx="30" cy="30" r="26"></circle>
+          <circle class="ring-fg" id="ringFg" cx="30" cy="30" r="26"></circle>
+        </svg>
+        <div class="ring-percent" id="ringPercent">0%</div>
+      </div>
+    </header>
+
+    <section class="card" id="tasksCard" hidden>
+      <h2 class="card-title"><span class="label">Задачи на сегодня</span></h2>
+      <div class="list" id="tasksList"></div>
+    </section>
+
+    <section class="card" id="habitsCard" hidden>
+      <h2 class="card-title"><span class="label">Привычки</span></h2>
+      <div class="list" id="habitsList"></div>
+    </section>
+
+    <section class="card" id="weeklyCard" hidden>
+      <h2 class="card-title"><span class="label">Силовые тренировки</span><span class="meta" id="weeklyMeta"></span></h2>
+      <div class="list" id="weeklyList"></div>
+    </section>
+
+  </div>
+
+  <!-- ===== screen: финансы ===== -->
+  <div class="screen" id="screenFinance" hidden>
+
+    <header class="header">
+      <div class="header-left">
+        <div class="header-text">
+          <div class="date" id="finMonthLabel">—</div>
+          <div class="status">Доходы по проектам</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="card" id="financeCard" hidden>
+      <h2 class="card-title"><span class="label">Проекты</span></h2>
+      <div class="list" id="financeList"></div>
+      <div class="fin-total">
+        <span class="label">Итого за месяц</span>
+        <span class="value" id="financeTotal">—</span>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===== shared states ===== -->
+  <div class="card skeleton" id="skeleton">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="fallback" id="fallback" hidden>
+    <div class="fallback-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.3" r=".6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9"/></svg>
+    </div>
+    <p>Не получилось загрузить данные. Проверь соединение и попробуй ещё раз.</p>
+    <button id="retryBtn">Повторить</button>
+  </div>
+
+  <nav class="tabbar" id="tabbar" hidden>
+    <div class="tabbar-inner">
+      <div class="tab active" id="tabDay" data-screen="screenDay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10"/></svg>
+        Мой день
+      </div>
+      <div class="tab" id="tabFinance" data-screen="screenFinance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg>
+        Финансы
+      </div>
+    </div>
+  </nav>
+
+</div>
+
+<script>
+(function(){
+
+  if (window.Telegram && window.Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+  }
+
+  var ICONS = {
+    water: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3C12 3 5.5 11 5.5 15.5A6.5 6.5 0 0 0 18.5 15.5C18.5 11 12 3 12 3Z"/></svg>',
+    walk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="5" r="1.6" fill="currentColor" stroke="none"/><path d="M13 8l-2.5 3 1.5 2-1 6"/><path d="M13 8l3 2 2-1"/><path d="M11 13l-3.5 1.5-1.5 4.5"/></svg>',
+    pill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-40 12 12)"/><path d="M11 9.3l2 5.4" transform="rotate(-40 12 12)"/></svg>',
+    task: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10"/></svg>',
+    dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11"/><path d="M5 8l3-3M16 19l3-3"/><rect x="2.5" y="10.5" width="4" height="3" rx="1"/><rect x="17.5" y="10.5" width="4" height="3" rx="1"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>'
+  };
+
+  var RING_CIRC = 2 * Math.PI * 26;
+
+  var state = { date: '', tasks: [], habits: [], weekly: [], finance: { month: '', projects: [] } };
+
+  var el = {
+    header: document.getElementById('header'),
+    dateLabel: document.getElementById('dateLabel'),
+    statusLabel: document.getElementById('statusLabel'),
+    ringFg: document.getElementById('ringFg'),
+    ringPercent: document.getElementById('ringPercent'),
+    tasksCard: document.getElementById('tasksCard'),
+    tasksList: document.getElementById('tasksList'),
+    habitsCard: document.getElementById('habitsCard'),
+    habitsList: document.getElementById('habitsList'),
+    weeklyCard: document.getElementById('weeklyCard'),
+    weeklyList: document.getElementById('weeklyList'),
+    weeklyMeta: document.getElementById('weeklyMeta'),
+    finMonthLabel: document.getElementById('finMonthLabel'),
+    financeCard: document.getElementById('financeCard'),
+    financeList: document.getElementById('financeList'),
+    financeTotal: document.getElementById('financeTotal'),
+    skeleton: document.getElementById('skeleton'),
+    fallback: document.getElementById('fallback'),
+    retryBtn: document.getElementById('retryBtn'),
+    tabbar: document.getElementById('tabbar'),
+    avatarImg: document.getElementById('avatarImg')
+  };
+
+  el.ringFg.style.strokeDasharray = RING_CIRC;
+  el.ringFg.style.strokeDashoffset = RING_CIRC;
+
+  el.avatarImg.addEventListener('error', function(){ el.avatarImg.style.display = 'none'; });
+
+  /* ---------- storage keys ---------- */
+  function dayKey(dateStr){ return 'day-tracker:day:' + dateStr; }
+
+  function isoWeekKey(d){
+    var date = new Date(d.getTime());
+    date.setHours(0,0,0,0);
+    date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+    var week1 = new Date(date.getFullYear(), 0, 4);
+    var weekNo = 1 + Math.round(((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+    return date.getFullYear() + '-W' + weekNo;
+  }
+
+  function weekKey(){ return 'day-tracker:week:' + isoWeekKey(new Date()); }
+
+  /* ---------- persistence ---------- */
+  function loadJSON(key){
+    try{ var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+  }
+
+  function saveDayState(){
+    try{
+      var map = {};
+      state.tasks.concat(state.habits).forEach(function(i){ map[i.id] = i.done; });
+      localStorage.setItem(dayKey(state.date), JSON.stringify(map));
+    }catch(e){}
+  }
+
+  function saveWeekState(){
+    try{
+      var map = {};
+      state.weekly.forEach(function(i){ map[i.id] = i.done; });
+      localStorage.setItem(weekKey(), JSON.stringify(map));
+    }catch(e){}
+  }
+
+  function applySaved(){
+    var savedDay = loadJSON(dayKey(state.date));
+    if(savedDay){
+      state.tasks.concat(state.habits).forEach(function(i){
+        if(savedDay.hasOwnProperty(i.id)) i.done = savedDay[i.id];
+      });
+    }
+    var savedWeek = loadJSON(weekKey());
+    if(savedWeek){
+      state.weekly.forEach(function(i){
+        if(savedWeek.hasOwnProperty(i.id)) i.done = savedWeek[i.id];
+      });
+    }
+  }
+
+  /* ---------- row builder ---------- */
+  function buildRow(item, iconKey, onToggle){
+    var row = document.createElement('div');
+    row.className = 'row' + (item.done ? ' done' : '');
+    row.setAttribute('role', 'button');
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('aria-pressed', item.done ? 'true' : 'false');
+
+    row.innerHTML =
+      '<div class="row-icon">' + ICONS[iconKey] + '</div>' +
+      '<div class="row-title"></div>' +
+      '<div class="check">' + ICONS.check + '</div>';
+
+    row.querySelector('.row-title').textContent = item.title;
+
+    function toggle(){
+      item.done = !item.done;
+      row.classList.toggle('done', item.done);
+      row.setAttribute('aria-pressed', item.done ? 'true' : 'false');
+      onToggle();
+    }
+
+    row.addEventListener('click', toggle);
+    row.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+    });
+
+    return row;
+  }
+
+  /* ---------- progress ring (день) ---------- */
+  function updateDayProgress(){
+    var all = state.tasks.concat(state.habits);
+    var total = all.length;
+    var done = all.filter(function(i){ return i.done; }).length;
+    var percent = total ? Math.round(done / total * 100) : 0;
+
+    el.ringPercent.textContent = percent + '%';
+    el.ringFg.style.strokeDashoffset = RING_CIRC * (1 - percent / 100);
+    el.ringFg.classList.toggle('complete', percent === 100);
+
+    el.statusLabel.textContent = total
+      ? (percent === 100 ? 'Всё выполнено' : 'Выполнено ' + done + ' из ' + total)
+      : 'Пока пусто';
+  }
+
+  function updateWeeklyMeta(){
+    var done = state.weekly.filter(function(i){ return i.done; }).length;
+    el.weeklyMeta.textContent = done + ' из ' + state.weekly.length + ' на этой неделе';
+  }
+
+  /* ---------- render: день ---------- */
+  function renderDay(){
+    el.dateLabel.textContent = state.date;
+
+    el.tasksList.innerHTML = '';
+    state.tasks.forEach(function(t){
+      el.tasksList.appendChild(buildRow(t, 'task', function(){ saveDayState(); updateDayProgress(); }));
+    });
+
+    el.habitsList.innerHTML = '';
+    state.habits.forEach(function(h){
+      el.habitsList.appendChild(buildRow(h, h.icon, function(){ saveDayState(); updateDayProgress(); }));
+    });
+
+    el.weeklyList.innerHTML = '';
+    state.weekly.forEach(function(w){
+      el.weeklyList.appendChild(buildRow(w, 'dumbbell', function(){ saveWeekState(); updateWeeklyMeta(); }));
+    });
+
+    el.tasksCard.hidden = state.tasks.length === 0;
+    el.habitsCard.hidden = state.habits.length === 0;
+    el.weeklyCard.hidden = state.weekly.length === 0;
+
+    updateDayProgress();
+    updateWeeklyMeta();
+  }
+
+  /* ---------- render: финансы ---------- */
+  function formatMoney(n){
+    return Math.round(n).toLocaleString('ru-RU') + ' ₽';
+  }
+
+  function renderFinance(){
+    el.finMonthLabel.textContent = state.finance.month || '—';
+    el.financeList.innerHTML = '';
+
+    var total = 0;
+    state.finance.projects.forEach(function(p){
+      total += (p.amount || 0);
+      var row = document.createElement('div');
+      row.className = 'fin-row';
+      row.innerHTML =
+        '<span class="fin-name"></span>' +
+        '<span class="fin-amount"></span>';
+      row.querySelector('.fin-name').textContent = p.name;
+      row.querySelector('.fin-amount').textContent = formatMoney(p.amount || 0);
+      el.financeList.appendChild(row);
+    });
+
+    el.financeTotal.textContent = formatMoney(total);
+    el.financeCard.hidden = state.finance.projects.length === 0;
+  }
+
+  /* ---------- top-level render ---------- */
+  function render(data){
+    state.date = data.date || '';
+    state.tasks = (data.tasks || []).map(function(t){ return { id: t.id, title: t.title, done: !!t.done }; });
+    state.habits = (data.habits || []).map(function(h){ return { id: h.id, title: h.title, icon: h.icon || 'pill', done: !!h.done }; });
+    state.weekly = (data.weeklyHabits || []).map(function(w){ return { id: w.id, title: w.title, done: !!w.done }; });
+    state.finance = data.finance || { month: '', projects: [] };
+
+    applySaved();
+
+    el.skeleton.hidden = true;
+    el.fallback.hidden = true;
+    el.header.hidden = false;
+    el.tabbar.hidden = false;
+
+    renderDay();
+    renderFinance();
+  }
+
+  function showFallback(){
+    el.skeleton.hidden = true;
+    el.header.hidden = true;
+    el.tasksCard.hidden = true;
+    el.habitsCard.hidden = true;
+    el.weeklyCard.hidden = true;
+    el.tabbar.hidden = true;
+    el.fallback.hidden = false;
+  }
+
+  function loadData(){
+    el.skeleton.hidden = false;
+    el.fallback.hidden = true;
+    el.header.hidden = true;
+    el.tabbar.hidden = true;
+
+    fetch('data.json?v=' + Date.now(), { cache: 'no-store' })
+      .then(function(res){
+        if(!res.ok) throw new Error('bad status ' + res.status);
+        return res.json();
+      })
+      .then(render)
+      .catch(showFallback);
+  }
+
+  el.retryBtn.addEventListener('click', loadData);
+
+  /* ---------- tabs ---------- */
+  var tabs = document.querySelectorAll('.tab');
+  var screens = { screenDay: document.getElementById('screenDay'), screenFinance: document.getElementById('screenFinance') };
+
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      tabs.forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      Object.keys(screens).forEach(function(key){ screens[key].hidden = (key !== tab.dataset.screen); });
+    });
+  });
+
+  loadData();
+
+})();
+</script>
+
+</body>
+</html>
